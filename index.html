@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="PT-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Barlow', sans-serif;
+        }
+    </style>
+    <title>Pizzaria IL Forno</title>
+</head>
+
+<body class="bg-white text-gray-800">
+
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4">
+            <div class="flex justify-between items-center">
+                <a href="#">
+                    <img src="./assets/images/logoPizza.png" alt="Logo Pizzaria IL Forno" class="h-16">
+                </a>
+                <div class="hidden md:flex items-center space-x-1">
+                    <a href="#"
+                        class="py-4 px-3 text-red-600 border-b-4 border-red-600 font-semibold text-sm">Início</a>
+                    <a href="#cardapio"
+                        class="py-4 px-3 text-gray-500 font-semibold hover:text-red-600 transition text-sm">Cardápio</a>
+                    <a href="#"
+                        class="py-4 px-3 text-gray-500 font-semibold hover:text-red-600 transition text-sm">Sobre</a>
+                    <a href="#"
+                        class="py-4 px-3 text-gray-500 font-semibold hover:text-red-600 transition text-sm">Contato</a>
+                </div>
+                <button id="btn-mobile" class="md:hidden p-2">
+                    <svg id="icon-ham" class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                    <svg id="icon-close" class="h-6 w-6 text-gray-500 hidden" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden">
+            <ul>
+                <li><a href="#" class="block px-4 py-3 text-sm font-semibold text-white bg-red-600">Início</a></li>
+                <li><a href="#cardapio"
+                        class="block px-4 py-3 text-sm font-semibold text-gray-500 hover:text-red-600">Cardápio</a></li>
+                <li><a href="#" class="block px-4 py-3 text-sm font-semibold text-gray-500 hover:text-red-600">Sobre</a>
+                </li>
+                <li><a href="#"
+                        class="block px-4 py-3 text-sm font-semibold text-gray-500 hover:text-red-600">Contato</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main>
+        <section class="flex flex-col md:flex-row justify-center items-center w-full text-center gap-6 py-8 px-4"
+            aria-labelledby="slogan">
+            <div class="w-full md:w-1/2">
+                <h2 id="slogan" class="text-3xl md:text-4xl font-semibold mb-4">A Autêntica Pizza Italiana Entregue Na
+                    Sua Porta</h2>
+                <p><a href="#cardapio"
+                        class="inline-block border border-gray-800 rounded-xl px-4 py-2 text-base hover:bg-gray-100 transition">Ver
+                        Cardápio</a></p>
+            </div>
+            <figure class="w-full md:w-1/2">
+                <img src="./assets/images/pizzaBanner_PNG.png" alt="Imagem de uma pizza deliciosa" class="mx-auto">
+            </figure>
+        </section>
+
+        <section class="border-t border-dashed border-gray-300 w-full max-w-3xl mx-auto px-4 pt-12 pb-10 mt-8"
+            id="cardapio">
+            <h1 class="text-3xl font-bold text-center mb-6">Cardápio</h1>
+
+            <nav class="overflow-x-auto whitespace-nowrap snap-x flex gap-2 pb-2">
+                <button data-cat="classicas"
+                    class="snap-start btn-cat px-4 py-1 rounded-full bg-gray-200 text-gray-700 font-bold text-sm cursor-pointer flex-shrink-0">Clássicas</button>
+                <button data-cat="especiais"
+                    class="snap-start btn-cat px-4 py-1 rounded-full bg-gray-200 text-gray-700 font-bold text-sm cursor-pointer flex-shrink-0">Especiais</button>
+                <button data-cat="bebidas"
+                    class="snap-start btn-cat px-4 py-1 rounded-full bg-gray-200 text-gray-700 font-bold text-sm cursor-pointer flex-shrink-0">Bebidas</button>
+            </nav>
+
+            <div id="cat-classicas" class="cat-section hidden">
+                <h2 class="text-left text-red-600 text-2xl font-semibold mt-10 mb-2">Pizzas Clássicas</h2>
+                <div id="lista-classicas"></div>
+            </div>
+
+            <div id="cat-especiais" class="cat-section hidden">
+                <h2 class="text-left text-red-600 text-2xl font-semibold mt-10 mb-2">Pizzas Especiais</h2>
+                <div id="lista-especiais"></div>
+            </div>
+
+            <div id="cat-bebidas" class="cat-section hidden">
+                <h2 class="text-left text-red-600 text-2xl font-semibold mt-10 mb-2">Bebidas</h2>
+                <div id="lista-bebidas"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-800 text-white text-center py-8 px-4 mt-10">
+        <h3 class="text-lg font-semibold mb-2">Pizzaria IL Forno</h3>
+        <address class="not-italic text-sm mb-1">Rua Prof. Toledo, 500, centro — Sorocaba</address>
+        <p class="text-sm mb-1">Contato: (15) 9876-4322</p>
+        <p class="text-sm text-gray-400">Aberto terça a domingo, 18h às 23h30 · Fechado às segundas</p>
+    </footer>
+
+    <a href="https://wa.me/551530887654" target="_blank" aria-label="WhatsApp IL Forno"
+        class="fixed bottom-24 right-5 w-14 h-14 z-50 active:scale-95 transition-all">
+        <img src="./assets/images/whatsapp.png" alt="WhatsApp IL Forno" class="w-full h-full">
+    </a>
+
+    <div id="detalhes-modal"
+        class="fixed inset-0 bg-black/70 z-[80] flex justify-center items-center opacity-0 pointer-events-none transition-opacity duration-300 px-4"
+        onclick="fecharModalDetalhes()">
+        <div class="bg-white w-full max-w-[420px] rounded-[24px] overflow-hidden transform scale-95 transition-transform duration-300 relative flex flex-col shadow-2xl"
+            id="detalhes-modal-content" onclick="event.stopPropagation()">
+
+            <button onclick="fecharModalDetalhes()"
+                class="absolute top-4 right-4 bg-gray-100 text-gray-600 w-9 h-9 rounded-full flex justify-center items-center font-bold text-xl z-10 hover:text-red-600 hover:bg-red-50 active:scale-90 transition-all">&times;</button>
+
+            <div class="w-full h-52 bg-gray-100 overflow-hidden flex-shrink-0">
+                <img id="detalhes-img" src="" alt="" class="w-full h-full object-cover">
+            </div>
+
+            <div class="p-6 pt-5">
+                <p id="detalhes-categoria" class="text-xs font-bold text-red-500 uppercase tracking-widest mb-1">Pizza
+                </p>
+                <h2 id="detalhes-nome" class="text-2xl font-bold text-gray-800 mb-1 leading-tight">Nome do Produto</h2>
+                <p id="detalhes-preco" class="text-2xl font-black text-red-600 mb-5">R$ 0,00</p>
+                <div class="bg-gray-50 border border-gray-100 rounded-xl p-4 mb-6">
+                    <p id="detalhes-desc" class="text-gray-600 text-sm leading-relaxed">Descrição do produto...</p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="fecharModalDetalhes()"
+                        class="flex-1 border border-gray-200 text-gray-500 py-3 rounded-xl text-sm font-semibold hover:bg-gray-50 active:scale-95 transition-all">
+                        Cancelar
+                    </button>
+                    <button id="detalhes-btn-add"
+                        class="flex-2 flex-grow bg-red-600 text-white py-3 px-6 rounded-xl text-sm font-extrabold shadow-md hover:bg-red-700 active:scale-[0.98] transition-all flex justify-center items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
+                            stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        Adicionar ao Pedido
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="carrinho-footer"
+        class="fixed bottom-0 left-0 w-full bg-red-600 text-white p-4 z-50 shadow-[0_-4px_6px_rgba(0,0,0,0.15)] transform translate-y-full transition-transform duration-300 flex justify-between items-center cursor-pointer"
+        onclick="abrirModalCarrinho()">
+        <div>
+            <p class="text-sm font-medium opacity-80">Resumo do Pedido</p>
+            <p class="text-xl font-bold">Total: <span id="carrinho-total">R$ 0,00</span></p>
+        </div>
+        <button
+            class="bg-white text-red-600 px-4 py-2 rounded-lg font-bold shadow-md active:scale-95 transition-all whitespace-nowrap">
+            Ver Carrinho
+        </button>
+    </div>
+
+    <div id="carrinho-modal"
+        class="fixed inset-0 bg-black/60 z-[60] flex flex-col justify-end sm:justify-center items-center opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white w-full sm:w-[500px] h-[85vh] sm:h-auto sm:max-h-[85vh] rounded-t-3xl sm:rounded-2xl flex flex-col transform translate-y-full sm:translate-y-0 sm:scale-95 transition-transform duration-300"
+            id="carrinho-modal-content">
+
+            <div class="p-5 border-b flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-gray-800">Seu Carrinho</h2>
+                <button onclick="fecharModalCarrinho()"
+                    class="text-3xl font-bold text-gray-400 hover:text-gray-800 focus:outline-none">&times;</button>
+            </div>
+
+            <div id="carrinho-itens-container" class="p-5 flex-1 overflow-y-auto flex flex-col gap-4"></div>
+
+            <div class="p-5 border-t bg-gray-50 rounded-b-3xl sm:rounded-b-2xl">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-lg font-bold">Total do Pedido:</span>
+                    <span id="modal-carrinho-total" class="text-2xl font-black text-red-600">R$ 0,00</span>
+                </div>
+                <button onclick="fecharPedido()"
+                    class="w-full bg-red-600 text-white py-3 rounded-xl text-lg font-bold shadow-lg hover:bg-red-700 active:scale-95 transition-all">
+                    Fechar Pedido via WhatsApp
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://backend-il-forno.vercel.app';
+
+        const catMap = {
+            'Classicas': 'lista-classicas',
+            'Especiais': 'lista-especiais',
+            'Bebidas': 'lista-bebidas',
+        };
+
+        const catLabel = {
+            'Classicas': 'Pizza Clássica',
+            'Especiais': 'Pizza Especial',
+            'Bebidas': 'Bebida',
+        };
+
+        let db = {};
+
+        async function carregarCardapio() {
+            try {
+                const resCat = await fetch(`${API_URL}/api/categorias`);
+                if (!resCat.ok) throw new Error(`Erro ${resCat.status} ao carregar categorias`);
+                const categorias = await resCat.json();
+
+                const idParaNome = {};
+                categorias.forEach(c => { idParaNome[c.id] = c.nome; });
+
+                const resProd = await fetch(`${API_URL}/api/produtos`);
+                if (!resProd.ok) throw new Error(`Erro ${resProd.status} ao carregar produtos`);
+                const produtos = await resProd.json();
+
+                const cardapio = produtos.map(p => ({
+                    ...p,
+                    cat: idParaNome[p.categoriaId] ?? 'Outros',
+                }));
+
+                cardapio.forEach(p => { db[p.id] = p; });
+
+                renderizarCardapio(cardapio);
+                const first = document.querySelector('.btn-cat')?.dataset.cat;
+                if (first) { showCat(first); setActive(first); }
+
+            } catch (err) {
+                console.error('Falha ao buscar cardápio:', err);
+                ['lista-classicas', 'lista-especiais', 'lista-bebidas'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.innerHTML = '<p class="text-sm text-gray-400 py-4">Não foi possível carregar os itens. Tente novamente.</p>';
+                });
+            }
+        }
+
+        function renderizarCardapio(produtos) {
+            Object.values(catMap).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = '';
+            });
+
+            produtos.forEach(p => {
+                const containerId = catMap[p.cat];
+                const container = document.getElementById(containerId);
+                if (!container) return;
+
+                const total = produtos.filter(x => catMap[x.cat] === containerId).length;
+                const posNoCat = container.children.length;
+                const isLast = posNoCat === total - 1;
+                const border = isLast ? '' : 'border-b border-gray-100';
+
+                const precoFmt = p.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+                const article = document.createElement('article');
+                article.className = `py-4 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 sm:gap-4 ${border} cursor-pointer group`;
+                article.onclick = () => abrirModalDetalhes(p.id);
+                article.innerHTML = `
+                    <div class="flex-1">
+                        <h3 class="text-lg font-bold group-hover:text-red-600 transition">${p.nome}</h3>
+                        <p class="text-sm text-gray-500">${p.descricao}</p>
+                    </div>
+                    <div class="flex items-center gap-3 sm:flex-col sm:items-end flex-shrink-0" onclick="event.stopPropagation()">
+                        <p class="text-base font-semibold text-red-600 whitespace-nowrap">${precoFmt}</p>
+                        <button onclick="adicionarItem('${p.id}', '${p.nome.replace(/'/g, "\\'")}', ${p.preco})"
+                            class="bg-red-600 text-white text-xs font-bold px-4 py-1.5 rounded-full hover:bg-red-700 active:scale-95 transition-all whitespace-nowrap">
+                            + Adicionar
+                        </button>
+                    </div>`;
+                container.appendChild(article);
+            });
+        }
+
+        carregarCardapio();
+
+        const btnMobile = document.getElementById('btn-mobile');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const iconHam = document.getElementById('icon-ham');
+        const iconClose = document.getElementById('icon-close');
+
+        btnMobile.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+            iconHam.classList.toggle('hidden');
+            iconClose.classList.toggle('hidden');
+        });
+        mobileMenu.querySelectorAll('a').forEach(l => l.addEventListener('click', () => {
+            mobileMenu.classList.add('hidden');
+            iconHam.classList.remove('hidden');
+            iconClose.classList.add('hidden');
+        }));
+
+        const catBtns = document.querySelectorAll('.btn-cat');
+        const catSecs = document.querySelectorAll('.cat-section');
+        let startX = 0, startY = 0;
+
+        function showCat(cat) {
+            catSecs.forEach(s => s.classList.add('hidden'));
+            document.getElementById('cat-' + cat)?.classList.remove('hidden');
+        }
+        function setActive(cat) {
+            catBtns.forEach(b => {
+                const active = b.dataset.cat === cat;
+                b.classList.toggle('bg-red-600', active);
+                b.classList.toggle('text-white', active);
+                b.classList.toggle('bg-gray-200', !active);
+                b.classList.toggle('text-gray-700', !active);
+            });
+        }
+        catBtns.forEach(btn => {
+            btn.addEventListener('touchstart', (e) => {
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                btn.classList.add('scale-95', 'opacity-80');
+            });
+            btn.addEventListener('touchend', (e) => {
+                btn.classList.remove('scale-95', 'opacity-80');
+                const endX = e.changedTouches[0].clientX;
+                const endY = e.changedTouches[0].clientY;
+                if (Math.abs(endX - startX) < 10 && Math.abs(endY - startY) < 10) {
+                    showCat(btn.dataset.cat); setActive(btn.dataset.cat);
+                }
+            });
+            btn.addEventListener('touchcancel', () => btn.classList.remove('scale-95', 'opacity-80'));
+            btn.addEventListener('click', () => { showCat(btn.dataset.cat); setActive(btn.dataset.cat); });
+        });
+        const first = catBtns[0]?.dataset.cat;
+        if (first) { showCat(first); setActive(first); }
+
+        const modalDetalhes = document.getElementById('detalhes-modal');
+        const modalDetalhesContent = document.getElementById('detalhes-modal-content');
+
+        function abrirModalDetalhes(id) {
+            const p = db[id]; if (!p) return;
+            if (navigator.vibrate) navigator.vibrate(40);
+            document.getElementById('detalhes-categoria').innerText = catLabel[p.cat] ?? p.cat;
+            document.getElementById('detalhes-nome').innerText = p.nome;
+            document.getElementById('detalhes-preco').innerText = p.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            document.getElementById('detalhes-desc').innerText = p.descricao;
+            const imgEl = document.getElementById('detalhes-img');
+            imgEl.src = p.imagem;
+            imgEl.alt = p.nome;
+            imgEl.onerror = function () {
+                this.onerror = null;
+                this.src = 'https://placehold.co/420x208/f3f4f6/9ca3af?text=' + encodeURIComponent(p.nome);
+            };
+            document.getElementById('detalhes-btn-add').onclick = function () {
+                adicionarItem(id, p.nome, p.preco);
+                fecharModalDetalhes();
+            };
+            modalDetalhes.classList.remove('opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                modalDetalhesContent.classList.remove('scale-95');
+                modalDetalhesContent.classList.add('scale-100');
+            }, 10);
+        }
+
+        function fecharModalDetalhes() {
+            modalDetalhesContent.classList.remove('scale-100');
+            modalDetalhesContent.classList.add('scale-95');
+            setTimeout(() => modalDetalhes.classList.add('opacity-0', 'pointer-events-none'), 300);
+        }
+
+        let carrinho = [];
+        const carrinhoFooter = document.getElementById('carrinho-footer');
+        const carrinhoTotalSpan = document.getElementById('carrinho-total');
+        const modal = document.getElementById('carrinho-modal');
+        const modalContent = document.getElementById('carrinho-modal-content');
+        const itensContainer = document.getElementById('carrinho-itens-container');
+        const modalTotalSpan = document.getElementById('modal-carrinho-total');
+
+        (function inicializarCarrinho() {
+            const salvo = localStorage.getItem('ilforno_carrinho');
+            if (salvo) { carrinho = JSON.parse(salvo); atualizarInterfaceCart(); }
+        })();
+
+        function adicionarItem(id, nome, preco) {
+            if (navigator.vibrate) navigator.vibrate(200);
+            const index = carrinho.findIndex(item => item.id === id);
+            if (index !== -1) { carrinho[index].quantidade += 1; }
+            else { carrinho.push({ id, nome, preco, quantidade: 1 }); }
+            atualizarCarrinho();
+        }
+
+        function abrirModalCarrinho() {
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            setTimeout(() => modalContent.classList.remove('translate-y-full', 'scale-95'), 10);
+        }
+
+        function fecharModalCarrinho() {
+            modalContent.classList.add('translate-y-full', 'scale-95');
+            setTimeout(() => modal.classList.add('opacity-0', 'pointer-events-none'), 300);
+        }
+
+        function aumentarQuantidade(id) {
+            const index = carrinho.findIndex(item => item.id === id);
+            if (index !== -1) { carrinho[index].quantidade += 1; atualizarCarrinho(); }
+            if (navigator.vibrate) navigator.vibrate(50);
+        }
+
+        function diminuirQuantidade(id) {
+            const index = carrinho.findIndex(item => item.id === id);
+            if (index !== -1) {
+                if (carrinho[index].quantidade > 1) { carrinho[index].quantidade -= 1; }
+                else { carrinho.splice(index, 1); if (carrinho.length === 0) fecharModalCarrinho(); }
+                atualizarCarrinho();
+                if (navigator.vibrate) navigator.vibrate(50);
+            }
+        }
+
+        function atualizarCarrinho() {
+            localStorage.setItem('ilforno_carrinho', JSON.stringify(carrinho));
+            atualizarInterfaceCart();
+        }
+
+        function atualizarInterfaceCart() {
+            if (carrinho.length === 0) { carrinhoFooter.classList.add('translate-y-full'); return; }
+            const total = carrinho.reduce((acc, item) => acc + (item.preco * item.quantidade), 0);
+            const fmt = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            carrinhoTotalSpan.innerText = fmt;
+            modalTotalSpan.innerText = fmt;
+            carrinhoFooter.classList.remove('translate-y-full');
+            renderizarItensModal();
+        }
+
+        function renderizarItensModal() {
+            if (!itensContainer) return;
+            itensContainer.innerHTML = '';
+            carrinho.forEach(item => {
+                const subTotal = (item.preco * item.quantidade).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                const precoUnit = item.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                const div = document.createElement('div');
+                div.className = "flex justify-between items-center border-b pb-4 mt-2";
+                div.innerHTML = `
+                    <div class="flex-1">
+                        <h4 class="font-bold text-base text-gray-800">${item.nome}</h4>
+                        <p class="text-sm text-gray-400">${precoUnit} un.</p>
+                        <p class="font-bold text-red-600 mt-0.5">${subTotal}</p>
+                    </div>
+                    <div class="flex items-center gap-3 bg-gray-100 p-2 rounded-xl ml-3">
+                        <button onclick="diminuirQuantidade('${item.id}')"
+                            class="w-8 h-8 flex justify-center items-center bg-white rounded-lg font-bold text-xl shadow-sm hover:text-red-600 active:scale-95 transition-all">-</button>
+                        <span class="font-bold text-lg w-5 text-center">${item.quantidade}</span>
+                        <button onclick="aumentarQuantidade('${item.id}')"
+                            class="w-8 h-8 flex justify-center items-center bg-white rounded-lg font-bold text-xl shadow-sm hover:text-red-600 active:scale-95 transition-all">+</button>
+                    </div>`;
+                itensContainer.appendChild(div);
+            });
+        }
+
+        function fecharPedido() {
+            if (carrinho.length === 0) return;
+            let msg = '🍕 *Pedido - Pizzaria IL Forno*\n\n';
+            carrinho.forEach(item => {
+                msg += `• ${item.nome} x${item.quantidade} — ${(item.preco * item.quantidade).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}\n`;
+            });
+            const total = carrinho.reduce((acc, item) => acc + (item.preco * item.quantidade), 0);
+            msg += `\n*Total: ${total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}*`;
+
+            window.open(`https://wa.me/551530887654?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+    </script>
+</body>
+
+</html>
