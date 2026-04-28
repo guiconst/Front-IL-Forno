@@ -4,12 +4,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- ══════════════ PWA — Pizzaria IL Forno ══════════════ -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#dc2626">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="IL Forno">
+    <link rel="apple-touch-icon" href="./assets/icons/apple-touch-icon.png">
+    <meta name="description" content="A autêntica pizza italiana entregue na sua porta. Peça agora pelo cardápio online da Pizzaria IL Forno — Sorocaba.">
+    <meta name="application-name" content="Pizzaria IL Forno">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Pizzaria IL Forno">
+    <meta property="og:description" content="A autêntica pizza italiana entregue na sua porta.">
+    <meta property="og:image" content="./assets/icons/icon-512x512.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="./assets/icons/icon-192x192.png">
+    <link rel="shortcut icon" href="./assets/icons/icon-192x192.png">
+    <!-- ═══════════════════════════════════════════════════════ -->
+
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            font-family: 'Barlow', sans-serif;
-        }
+        body { font-family: 'Barlow', sans-serif; }
+        #pwa-install-banner { transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease; }
+        #pwa-install-banner.oculto { transform: translateY(100px); opacity: 0; pointer-events: none; }
     </style>
     <title>Pizzaria IL Forno</title>
 </head>
@@ -469,6 +488,63 @@
             window.open(`https://wa.me/551530887654?text=${encodeURIComponent(msg)}`, '_blank');
         }
     </script>
+
+    <!-- ══════════════ PWA — Banner + Service Worker ══════════════ -->
+    <div id="pwa-install-banner" class="oculto fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] bg-gray-900 text-white rounded-2xl shadow-2xl flex items-center gap-3 px-4 py-3 w-[90vw] max-w-xs">
+        <img src="./assets/icons/icon-192x192.png" alt="IL Forno" class="w-10 h-10 rounded-xl flex-shrink-0">
+        <div class="flex-1 min-w-0">
+            <p class="font-bold text-sm leading-tight">Pizzaria IL Forno</p>
+            <p class="text-xs text-gray-400 leading-tight">Adicione à tela inicial</p>
+        </div>
+        <div class="flex gap-2 flex-shrink-0">
+            <button id="pwa-install-btn" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg active:scale-95 transition-all">Instalar</button>
+            <button id="pwa-dismiss-btn" class="text-gray-400 hover:text-white text-xs px-2 active:scale-95 transition-all">✕</button>
+        </div>
+    </div>
+
+    <script>
+        // ── Service Worker ─────────────────────────────
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js', { scope: './' })
+                    .then(r => console.log('[PWA] SW registrado. Scope:', r.scope))
+                    .catch(e => console.error('[PWA] SW falhou:', e));
+            });
+        }
+
+        // ── Banner A2HS ────────────────────────────────
+        let deferredPrompt = null;
+        const pwaBanner   = document.getElementById('pwa-install-banner');
+        const pwaInstall  = document.getElementById('pwa-install-btn');
+        const pwaDismiss  = document.getElementById('pwa-dismiss-btn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            if (!sessionStorage.getItem('ilforno_pwa_ok'))
+                setTimeout(() => pwaBanner.classList.remove('oculto'), 2500);
+        });
+
+        pwaInstall?.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            pwaBanner.classList.add('oculto');
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log('[PWA] Escolha:', outcome);
+            deferredPrompt = null;
+        });
+
+        pwaDismiss?.addEventListener('click', () => {
+            pwaBanner.classList.add('oculto');
+            sessionStorage.setItem('ilforno_pwa_ok', '1');
+        });
+
+        window.addEventListener('appinstalled', () => {
+            pwaBanner.classList.add('oculto');
+            deferredPrompt = null;
+        });
+    </script>
+    <!-- ═════════════════════════════════════════════════════════ -->
 </body>
 
 </html>
