@@ -342,18 +342,7 @@
         let pedidoModalId = null;
         let timerInterval = null;
 
-        const nomes = ['João Silva', 'Maria Costa', 'Pedro Alves', 'Ana Souza', 'Carlos Lima', 'Fernanda Rocha', 'Lucas Melo', 'Camila Dias'];
-        const itensExemplo = [
-            { nome: 'Pizza Margherita', preco: 52 },
-            { nome: 'Pizza Calabresa', preco: 48 },
-            { nome: 'Pizza 4 Queijos', preco: 58 },
-            { nome: 'Pizza Frango/Catup.', preco: 55 },
-            { nome: 'Coca-Cola 2L', preco: 12 },
-            { nome: 'Suco Laranja', preco: 10 },
-            { nome: 'Pizza Portuguesa', preco: 56 },
-            { nome: 'Pizza Pepperoni', preco: 62 },
-        ];
-        const obs = ['Sem cebola', 'Borda extra recheada', 'Bem assada', 'Sem azeitona', ''];
+        const API_URL = 'https://backend-il-forno.vercel.app';
         let pedidoCount = 1000;
 
         function atualizarClock() {
@@ -504,21 +493,32 @@
             document.getElementById('badge-prontos').textContent = ok;
         }
 
-        function avancarStatus(id) {
+        async function avancarStatus(id) {
             const p = pedidos.find(x => x.id === id);
             if (!p) return;
-            if (p.status === 'novos') p.status = 'prep';
-            else if (p.status === 'prep') p.status = 'prontos';
-            renderBoard();
-            if (pedidoModalId === id) abrirModal(id);
+            const novoStatus = p.status === 'novos' ? 'prep' : p.status === 'prep' ? 'prontos' : null;
+            if (!novoStatus) return;
+
+            try {
+                const resp = await fetch(`${API_URL}/api/pedidos/${id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: novoStatus })
+                });
+                if (!resp.ok) throw new Error('Falha ao atualizar status');
+                p.status = novoStatus;
+                renderBoard();
+                if (pedidoModalId === id) abrirModal(id);
+            } catch (e) {
+                showToast('❌ Erro ao atualizar status. Tente novamente.');
+                console.error(e);
+            }
         }
 
         function simularPedido() {
-            const p = criarPedido();
-            pedidos.unshift(p);
-            renderBoard();
-            playSound();
-            showToast(`🍕 Novo pedido #${p.numero} recebido!`);
+            // Substituído por polling real — este botão agora força um refresh manual
+            carregarPedidos();
+            showToast('🔄 Atualizando pedidos...');
         }
 
         function limparProntos() {
@@ -526,7 +526,7 @@
             pedidos = pedidos.filter(p => p.status !== 'prontos');
             const removidos = antes - pedidos.length;
             renderBoard();
-            if (removidos > 0) showToast(`${removidos} pedido(s) removido(s) dos prontos.`);
+            if (removidos > 0) showToast(`${removidos} pedido(s) removido(s) da visualização.`);
         }
 
         function onDragStart(e, id) {
@@ -656,11 +656,43 @@
             }, 3000);
         }
 
-        const p1 = criarPedido(); p1.status = 'novos';
-        const p2 = criarPedido(); p2.status = 'prep'; p2.criadoEm -= 600000;
-        const p3 = criarPedido(); p3.status = 'prontos';
-        pedidos.push(p1, p2, p3);
-        renderBoard();
+        // ── Buscar pedidos reais da API ──────────────────────────────
+        async function carregarPedidos() {
+            try {
+                const resp = await fetch(`${API_URL}/api/pedidos`);
+                if (!resp.ok) throw new Error('Falha ao buscar pedidos');
+                const data = await resp.json();
+
+                // Mapear formato da API para o formato do board
+                const novos = data.map(p => ({
+                    id: String(p.id),
+                    numero: p.id,
+                    cliente: p.cliente,
+                    itens: (p.itens || []).map(i => ({ nome: i.nome, preco: i.preco, qtd: i.quantidade })),
+                    total: p.total,
+                    obs: '',
+                    status: p.status || 'novos',
+                    criadoEm: new Date(p.created_at).getTime()
+                }));
+
+                // Detectar pedidos novos para tocar som
+                const idsAntigos = pedidos.map(x => x.id);
+                const chegaram = novos.filter(p => !idsAntigos.includes(p.id) && p.status === 'novos');
+                if (chegaram.length > 0 && pedidos.length > 0) {
+                    playSound();
+                    chegaram.forEach(p => showToast(`🍕 Novo pedido #${p.numero} de ${p.cliente}!`));
+                }
+
+                pedidos = novos;
+                renderBoard();
+            } catch (e) {
+                console.error('Erro ao carregar pedidos:', e);
+            }
+        }
+
+        // Carrega na abertura e atualiza a cada 10 segundos (polling)
+        carregarPedidos();
+        setInterval(carregarPedidos, 10000);
     </script>
 
 </body>
