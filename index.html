@@ -206,9 +206,9 @@
                     <span class="text-lg font-bold">Total do Pedido:</span>
                     <span id="modal-carrinho-total" class="text-2xl font-black text-red-600">R$ 0,00</span>
                 </div>
-                <button onclick="fecharPedido()"
+                <button id="btn-finalizar" onclick="fecharPedido()"
                     class="w-full bg-red-600 text-white py-3 rounded-xl text-lg font-bold shadow-lg hover:bg-red-700 active:scale-95 transition-all">
-                    Fechar Pedido via WhatsApp
+                    🍕 Finalizar Pedido
                 </button>
             </div>
         </div>
@@ -477,16 +477,69 @@
             });
         }
 
-        function fecharPedido() {
+        async function fecharPedido() {
             if (carrinho.length === 0) return;
-            let msg = '🍕 *Pedido - Pizzaria IL Forno*\n\n';
-            carrinho.forEach(item => {
-                msg += `• ${item.nome} x${item.quantidade} — ${(item.preco * item.quantidade).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}\n`;
-            });
-            const total = carrinho.reduce((acc, item) => acc + (item.preco * item.quantidade), 0);
-            msg += `\n*Total: ${total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}*`;
 
-            window.open(`https://wa.me/551530887654?text=${encodeURIComponent(msg)}`, '_blank');
+            // ── 1. Bloquear botão (anti duplo-clique) ─────────────────
+            const btn = document.getElementById('btn-finalizar');
+            btn.disabled = true;
+            btn.classList.add('pointer-events-none', 'opacity-60');
+            btn.innerHTML = '⏳ Enviando...';
+
+            // ── 2. Capturar nome do cliente (sessionStorage ou prompt) ─
+            let nomeCliente = sessionStorage.getItem('ilforno_nome');
+            if (!nomeCliente) {
+                nomeCliente = prompt('Qual é o seu nome?') || 'Cliente Anônimo';
+                sessionStorage.setItem('ilforno_nome', nomeCliente);
+            }
+
+            // ── 3. Capturar localização (Geolocation API) ─────────────
+            let localizacao = null;
+            try {
+                localizacao = await new Promise((resolve) => {
+                    navigator.geolocation.getCurrentPosition(
+                        pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+                        () => resolve(null),
+                        { timeout: 5000 }
+                    );
+                });
+            } catch (e) { localizacao = null; }
+
+            // ── 4. Montar o payload ───────────────────────────────────
+            const total = carrinho.reduce((acc, item) => acc + (item.preco * item.quantidade), 0);
+            const payloadPedido = {
+                cliente: nomeCliente,
+                localizacao: localizacao,
+                itens: carrinho,
+                total: total
+            };
+
+            // ── 5. Enviar via Fetch POST ──────────────────────────────
+            try {
+                const resposta = await fetch(`${API_URL}/api/pedidos`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payloadPedido)
+                });
+
+                if (!resposta.ok) throw new Error(`Erro do servidor: ${resposta.status}`);
+
+                // ── 6. Sucesso: limpar carrinho e fechar modal ─────────
+                alert(`✅ Pedido enviado para a cozinha, ${nomeCliente}! Acompanhe pela tela da cozinha.`);
+                carrinho = [];
+                localStorage.removeItem('ilforno_carrinho');
+                atualizarInterfaceCart();
+                fecharModalCarrinho();
+
+            } catch (err) {
+                alert('❌ Erro ao enviar pedido. Verifique sua conexão e tente novamente.');
+                console.error(err);
+            } finally {
+                // ── 7. Reativar botão sempre ───────────────────────────
+                btn.disabled = false;
+                btn.classList.remove('pointer-events-none', 'opacity-60');
+                btn.innerHTML = '🍕 Finalizar Pedido';
+            }
         }
     </script>
 
