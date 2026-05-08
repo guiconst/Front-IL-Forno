@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IL Forno — Cozinha</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Barlow', sans-serif;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='%23f3f4f6'/%3E%3Crect x='0' y='0' width='2' height='2' fill='%23e5e7eb' opacity='0.4'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        main {
+            position: relative;
+            z-index: 1;
+        }
+
+        .pulse-new {
+            animation: pulseRed 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulseRed {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5);
+            }
+
+            50% {
+                box-shadow: 0 0 0 8px rgba(220, 38, 38, 0);
+            }
+        }
+
+        .card-enter {
+            animation: slideIn 0.35s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.97);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .blink-urgent {
+            animation: blink 0.8s step-start infinite;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        .col-accent::after {
+            content: '';
+            display: block;
+            height: 3px;
+            border-radius: 99px;
+            margin-top: 6px;
+        }
+
+        .col-novos .col-accent::after {
+            background: #dc2626;
+        }
+
+        .col-prep .col-accent::after {
+            background: #ea580c;
+        }
+
+        .col-prontos .col-accent::after {
+            background: #16a34a;
+        }
+
+        .col-body {
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #e5e7eb transparent;
+        }
+
+        .col-body::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .col-body::-webkit-scrollbar-thumb {
+            background: #e5e7eb;
+            border-radius: 99px;
+        }
+
+        #toast {
+            transition: all 0.3s ease;
+        }
+
+        .sound-on {
+            background: #dc2626;
+            color: white;
+        }
+
+        .sound-off {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .badge {
+            min-width: 1.4rem;
+            text-align: center;
+        }
+
+        .item-row:hover {
+            background: #fef2f2;
+        }
+
+        .dragging {
+            opacity: 0.4;
+            border: 2px dashed #dc2626 !important;
+        }
+
+        .drag-over {
+            outline: 2px dashed #dc2626;
+            outline-offset: 2px;
+            background: #fef2f2;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 text-gray-800 min-h-screen flex flex-col">
+
+    <header class="bg-white shadow-sm sticky top-0 z-50 border-b border-gray-200">
+        <div class="max-w-screen-2xl mx-auto px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
+
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center shadow">
+                    <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 0c0 5.52-3.58 10-8 10" />
+                        <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none" />
+                    </svg>
+                </div>
+                <div>
+                    <span class="font-black text-gray-800 text-lg leading-none block">IL Forno</span>
+                    <span class="text-xs font-semibold text-red-600 uppercase tracking-widest">Painel da Cozinha</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 flex-wrap">
+                <div class="bg-red-50 border border-red-100 rounded-lg px-3 py-1.5 flex items-center gap-2">
+                    <div class="w-2 h-2 bg-red-600 rounded-full pulse-new"></div>
+                    <span class="text-xs font-bold text-red-700">Novos: <span id="count-novos">0</span></span>
+                </div>
+                <div class="bg-orange-50 border border-orange-100 rounded-lg px-3 py-1.5 flex items-center gap-2">
+                    <div class="w-2 h-2 bg-orange-500 rounded-full"></div>
+                    <span class="text-xs font-bold text-orange-700">Preparo: <span id="count-prep">0</span></span>
+                </div>
+                <div class="bg-green-50 border border-green-100 rounded-lg px-3 py-1.5 flex items-center gap-2">
+                    <div class="w-2 h-2 bg-green-600 rounded-full"></div>
+                    <span class="text-xs font-bold text-green-700">Prontos: <span id="count-prontos">0</span></span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <div class="hidden sm:flex items-center gap-1.5 bg-gray-800 text-white rounded-lg px-3 py-1.5">
+                    <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 6v6l4 2" stroke-linecap="round" />
+                    </svg>
+                    <span id="clock" class="text-xs font-bold tracking-wide">00:00:00</span>
+                </div>
+
+                <button id="btn-sound" onclick="toggleSound()"
+                    class="sound-on rounded-lg px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 transition-all">
+                    <svg id="icon-sound" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15.536 8.464a5 5 0 010 7.072M12 6v12m0 0l-3-3m3 3l3-3M9 9H5a1 1 0 00-1 1v4a1 1 0 001 1h4l3 3V6L9 9z" />
+                    </svg>
+                    Som
+                </button>
+
+                <button onclick="simularPedido()"
+                    class="bg-red-600 hover:bg-red-700 active:scale-95 text-white rounded-lg px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Simular Pedido
+                </button>
+
+                <button onclick="limparProntos()"
+                    class="bg-gray-100 hover:bg-gray-200 active:scale-95 text-gray-600 rounded-lg px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m2 0a1 1 0 00-1-1H8a1 1 0 00-1 1m2 0V4h6v3" />
+                    </svg>
+                    Limpar Prontos
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-screen-2xl mx-auto w-full px-4 py-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 h-full" style="min-height: calc(100vh - 180px);">
+
+            <div class="col-novos flex flex-col bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden"
+                ondragover="onDragOver(event, 'novos')" ondragleave="onDragLeave(event)"
+                ondrop="onDrop(event, 'novos')">
+                <div class="px-5 pt-4 pb-3 border-b border-gray-100 flex items-center justify-between">
+                    <div>
+                        <div class="flex items-center gap-2 col-accent">
+                            <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+                            <span class="font-black text-gray-800 text-base">Novos Pedidos</span>
+                        </div>
+                    </div>
+                    <span id="badge-novos"
+                        class="badge bg-red-600 text-white text-xs font-black rounded-full px-2 py-0.5 pulse-new">0</span>
+                </div>
+                <div id="col-novos" class="col-body flex-1 p-3 flex flex-col gap-3"></div>
+                <div class="px-5 py-3 border-t border-gray-100 bg-gray-50">
+                    <p class="text-xs text-gray-400 font-semibold">Arraste para <strong>Em Preparo</strong> ao iniciar
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-prep flex flex-col bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden"
+                ondragover="onDragOver(event, 'prep')" ondragleave="onDragLeave(event)" ondrop="onDrop(event, 'prep')">
+                <div class="px-5 pt-4 pb-3 border-b border-gray-100 flex items-center justify-between">
+                    <div>
+                        <div class="flex items-center gap-2 col-accent">
+                            <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                    d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                    d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
+                            </svg>
+                            <span class="font-black text-gray-800 text-base">Em Preparo</span>
+                        </div>
+                    </div>
+                    <span id="badge-prep"
+                        class="badge bg-orange-500 text-white text-xs font-black rounded-full px-2 py-0.5">0</span>
+                </div>
+                <div id="col-prep" class="col-body flex-1 p-3 flex flex-col gap-3"></div>
+                <div class="px-5 py-3 border-t border-gray-100 bg-gray-50">
+                    <p class="text-xs text-gray-400 font-semibold">Arraste para <strong>Pronto</strong> ao finalizar</p>
+                </div>
+            </div>
+
+            <div class="col-prontos flex flex-col bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden"
+                ondragover="onDragOver(event, 'prontos')" ondragleave="onDragLeave(event)"
+                ondrop="onDrop(event, 'prontos')">
+                <div class="px-5 pt-4 pb-3 border-b border-gray-100 flex items-center justify-between">
+                    <div>
+                        <div class="flex items-center gap-2 col-accent">
+                            <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span class="font-black text-gray-800 text-base">Prontos</span>
+                        </div>
+                    </div>
+                    <span id="badge-prontos"
+                        class="badge bg-green-600 text-white text-xs font-black rounded-full px-2 py-0.5">0</span>
+                </div>
+                <div id="col-prontos" class="col-body flex-1 p-3 flex flex-col gap-3"></div>
+                <div class="px-5 py-3 border-t border-gray-100 bg-gray-50">
+                    <p class="text-xs text-gray-400 font-semibold">Aguardando retirada / entrega</p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div id="toast"
+        class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] bg-gray-800 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-2xl opacity-0 pointer-events-none flex items-center gap-2">
+        <svg class="w-4 h-4 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span id="toast-msg">–</span>
+    </div>
+
+    <div id="modal"
+        class="fixed inset-0 bg-black/60 z-[80] flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-200"
+        onclick="fecharModal()">
+        <div id="modal-content"
+            class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden transform scale-95 transition-transform duration-200"
+            onclick="event.stopPropagation()">
+            <div class="bg-gray-800 text-white p-5 flex items-start justify-between">
+                <div>
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Detalhes do Pedido</p>
+                    <h2 id="modal-titulo" class="text-xl font-black">Pedido #0000</h2>
+                    <p id="modal-cliente" class="text-sm text-gray-300 mt-0.5">—</p>
+                </div>
+                <button onclick="fecharModal()"
+                    class="text-gray-400 hover:text-white text-2xl leading-none font-bold">&times;</button>
+            </div>
+            <div class="p-5">
+                <div id="modal-itens" class="space-y-2 mb-5"></div>
+                <div class="border-t border-gray-100 pt-4 flex justify-between items-center">
+                    <span class="font-bold text-gray-700">Total</span>
+                    <span id="modal-total" class="text-xl font-black text-red-600">R$ 0,00</span>
+                </div>
+                <div id="modal-obs"
+                    class="mt-3 bg-yellow-50 border border-yellow-100 rounded-xl p-3 text-sm text-yellow-800 font-semibold hidden">
+                    <span class="font-black">OBS:</span> <span id="modal-obs-text"></span>
+                </div>
+                <div class="mt-5 flex gap-3">
+                    <button onclick="fecharModal()"
+                        class="flex-1 border border-gray-200 text-gray-500 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-50 active:scale-95 transition-all">Fechar</button>
+                    <button id="modal-btn-acao"
+                        class="flex-1 bg-red-600 text-white py-2.5 rounded-xl text-sm font-extrabold hover:bg-red-700 active:scale-95 transition-all shadow">Avançar
+                        Status</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <audio id="audio-novo" preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAA..." type="audio/wav">
+    </audio>
+
+    <script>
+        let pedidos = [];
+        let soundOn = true;
+        let dragId = null;
+        let pedidoModalId = null;
+        let timerInterval = null;
+
+        const nomes = ['João Silva', 'Maria Costa', 'Pedro Alves', 'Ana Souza', 'Carlos Lima', 'Fernanda Rocha', 'Lucas Melo', 'Camila Dias'];
+        const itensExemplo = [
+            { nome: 'Pizza Margherita', preco: 52 },
+            { nome: 'Pizza Calabresa', preco: 48 },
+            { nome: 'Pizza 4 Queijos', preco: 58 },
+            { nome: 'Pizza Frango/Catup.', preco: 55 },
+            { nome: 'Coca-Cola 2L', preco: 12 },
+            { nome: 'Suco Laranja', preco: 10 },
+            { nome: 'Pizza Portuguesa', preco: 56 },
+            { nome: 'Pizza Pepperoni', preco: 62 },
+        ];
+        const obs = ['Sem cebola', 'Borda extra recheada', 'Bem assada', 'Sem azeitona', ''];
+        let pedidoCount = 1000;
+
+        function atualizarClock() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('clock').textContent = `${h}:${m}:${s}`;
+        }
+        setInterval(atualizarClock, 1000);
+        atualizarClock();
+
+        function formatarTempo(segundos) {
+            const m = Math.floor(segundos / 60);
+            const s = segundos % 60;
+            return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function atualizarTimers() {
+            const agora = Date.now();
+            pedidos.forEach(p => {
+                const el = document.getElementById(`timer-${p.id}`);
+                if (!el) return;
+                const seg = Math.floor((agora - p.criadoEm) / 1000);
+                el.textContent = formatarTempo(seg);
+                if (p.status === 'prep' && seg > 900) {
+                    el.classList.add('blink-urgent', 'text-red-600');
+                }
+            });
+        }
+        setInterval(atualizarTimers, 1000);
+
+        function criarPedido() {
+            const qtd = Math.floor(Math.random() * 3) + 1;
+            const itensSel = [];
+            for (let i = 0; i < qtd; i++) {
+                const item = itensExemplo[Math.floor(Math.random() * itensExemplo.length)];
+                const existe = itensSel.find(x => x.nome === item.nome);
+                if (existe) existe.qtd++;
+                else itensSel.push({ ...item, qtd: 1 });
+            }
+            const total = itensSel.reduce((s, i) => s + i.preco * i.qtd, 0);
+            const obsSel = obs[Math.floor(Math.random() * obs.length)];
+            return {
+                id: `p${++pedidoCount}`,
+                numero: pedidoCount,
+                cliente: nomes[Math.floor(Math.random() * nomes.length)],
+                itens: itensSel,
+                total,
+                obs: obsSel,
+                status: 'novos',
+                criadoEm: Date.now(),
+            };
+        }
+
+
+        function statusConfig(status) {
+            if (status === 'novos') return { bg: 'border-red-200', badge: 'bg-red-100 text-red-700', label: 'Novo' };
+            if (status === 'prep') return { bg: 'border-orange-200', badge: 'bg-orange-100 text-orange-700', label: 'Em Preparo' };
+            return { bg: 'border-green-200', badge: 'bg-green-100 text-green-700', label: 'Pronto' };
+        }
+
+        function renderCard(p) {
+            const cfg = statusConfig(p.status);
+            const precoFmt = p.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+            const card = document.createElement('div');
+            card.id = `card-${p.id}`;
+            card.draggable = true;
+            card.className = `card-enter bg-white border-2 ${cfg.bg} rounded-xl p-4 shadow-sm cursor-grab active:cursor-grabbing select-none transition-all hover:shadow-md`;
+
+            card.addEventListener('dragstart', e => onDragStart(e, p.id));
+            card.addEventListener('dragend', onDragEnd);
+
+            const itensHtml = p.itens.slice(0, 3).map(i =>
+                `<div class="item-row flex justify-between py-1 px-1 rounded-lg transition-colors text-sm">
+           <span class="font-semibold text-gray-700"><span class="text-red-600 font-black">${i.qtd}x</span> ${i.nome}</span>
+           <span class="text-gray-400 font-semibold">${(i.preco * i.qtd).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+         </div>`
+            ).join('');
+            const mais = p.itens.length > 3 ? `<p class="text-xs text-gray-400 mt-1 font-semibold">+ ${p.itens.length - 3} itens...</p>` : '';
+
+            card.innerHTML = `
+        <div class="flex justify-between items-start mb-3">
+          <div>
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Pedido</p>
+            <h3 class="font-black text-gray-800 text-lg leading-none">#${p.numero}</h3>
+            <p class="text-xs text-gray-500 font-semibold mt-0.5">${p.cliente}</p>
+          </div>
+          <div class="flex flex-col items-end gap-1.5">
+            <span class="text-xs font-bold px-2 py-0.5 rounded-full ${cfg.badge}">${cfg.label}</span>
+            <span id="timer-${p.id}" class="text-xs font-mono font-bold text-gray-400">00:00</span>
+          </div>
+        </div>
+
+        <div class="bg-gray-50 rounded-xl p-2 mb-3 border border-gray-100 space-y-0.5">
+          ${itensHtml}
+          ${mais}
+        </div>
+
+        ${p.obs ? `<div class="bg-yellow-50 border border-yellow-100 rounded-lg px-2 py-1.5 mb-3">
+          <p class="text-xs font-bold text-yellow-700"><span class="uppercase tracking-wide">OBS:</span> ${p.obs}</p>
+        </div>` : ''}
+
+        <div class="flex items-center justify-between">
+          <span class="font-black text-red-600 text-base">${precoFmt}</span>
+          <div class="flex gap-2">
+            <button onclick="abrirModal('${p.id}')" class="text-xs text-gray-400 hover:text-gray-700 font-bold underline-offset-2 hover:underline transition">Detalhes</button>
+            ${avancarBtnHtml(p)}
+          </div>
+        </div>
+      `;
+            return card;
+        }
+
+        function avancarBtnHtml(p) {
+            if (p.status === 'novos') return `<button onclick="avancarStatus('${p.id}')" class="bg-orange-500 hover:bg-orange-600 active:scale-95 text-white text-xs font-extrabold px-3 py-1.5 rounded-lg transition-all shadow-sm">Iniciar</button>`;
+            if (p.status === 'prep') return `<button onclick="avancarStatus('${p.id}')" class="bg-green-600 hover:bg-green-700 active:scale-95 text-white text-xs font-extrabold px-3 py-1.5 rounded-lg transition-all shadow-sm">Pronto ✓</button>`;
+            return `<span class="text-green-600 text-xs font-black">✓ Concluído</span>`;
+        }
+
+        function renderBoard() {
+            ['novos', 'prep', 'prontos'].forEach(col => {
+                const container = document.getElementById(`col-${col}`);
+                container.innerHTML = '';
+                const lista = pedidos.filter(p => p.status === col);
+                lista.forEach(p => container.appendChild(renderCard(p)));
+                if (!lista.length) {
+                    const vazio = document.createElement('div');
+                    vazio.className = 'flex-1 flex items-center justify-center py-16';
+                    vazio.innerHTML = `<p class="text-sm text-gray-300 font-semibold">Nenhum pedido</p>`;
+                    container.appendChild(vazio);
+                }
+            });
+            atualizarContadores();
+        }
+
+        function atualizarContadores() {
+            const n = pedidos.filter(p => p.status === 'novos').length;
+            const pr = pedidos.filter(p => p.status === 'prep').length;
+            const ok = pedidos.filter(p => p.status === 'prontos').length;
+
+            document.getElementById('count-novos').textContent = n;
+            document.getElementById('count-prep').textContent = pr;
+            document.getElementById('count-prontos').textContent = ok;
+            document.getElementById('badge-novos').textContent = n;
+            document.getElementById('badge-prep').textContent = pr;
+            document.getElementById('badge-prontos').textContent = ok;
+        }
+
+        function avancarStatus(id) {
+            const p = pedidos.find(x => x.id === id);
+            if (!p) return;
+            if (p.status === 'novos') p.status = 'prep';
+            else if (p.status === 'prep') p.status = 'prontos';
+            renderBoard();
+            if (pedidoModalId === id) abrirModal(id);
+        }
+
+        function simularPedido() {
+            const p = criarPedido();
+            pedidos.unshift(p);
+            renderBoard();
+            playSound();
+            showToast(`🍕 Novo pedido #${p.numero} recebido!`);
+        }
+
+        function limparProntos() {
+            const antes = pedidos.length;
+            pedidos = pedidos.filter(p => p.status !== 'prontos');
+            const removidos = antes - pedidos.length;
+            renderBoard();
+            if (removidos > 0) showToast(`${removidos} pedido(s) removido(s) dos prontos.`);
+        }
+
+        function onDragStart(e, id) {
+            dragId = id;
+            setTimeout(() => {
+                const el = document.getElementById(`card-${id}`);
+                if (el) el.classList.add('dragging');
+            }, 0);
+        }
+        function onDragEnd() {
+            if (dragId) {
+                const el = document.getElementById(`card-${dragId}`);
+                if (el) el.classList.remove('dragging');
+            }
+            dragId = null;
+            document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+        }
+        function onDragOver(e, col) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+        function onDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+        function onDrop(e, colDestino) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            if (!dragId) return;
+            const p = pedidos.find(x => x.id === dragId);
+            if (!p) return;
+            const ordem = ['novos', 'prep', 'prontos'];
+            const orig = ordem.indexOf(p.status);
+            const dest = ordem.indexOf(colDestino);
+            if (dest <= orig) {
+                showToast('Não é possível retroceder um pedido.');
+                return;
+            }
+            p.status = colDestino;
+            renderBoard();
+            showToast(colDestino === 'prep' ? '🔥 Pedido em preparo!' : '✅ Pedido marcado como pronto!');
+        }
+
+        function abrirModal(id) {
+            const p = pedidos.find(x => x.id === id);
+            if (!p) return;
+            pedidoModalId = id;
+
+            document.getElementById('modal-titulo').textContent = `Pedido #${p.numero}`;
+            document.getElementById('modal-cliente').textContent = `👤 ${p.cliente}`;
+
+            const itensEl = document.getElementById('modal-itens');
+            itensEl.innerHTML = p.itens.map(i => `
+        <div class="flex justify-between py-2 border-b border-gray-50 last:border-0">
+          <span class="font-semibold text-gray-700"><span class="text-red-600 font-black">${i.qtd}×</span> ${i.nome}</span>
+          <span class="font-bold text-gray-500">${(i.preco * i.qtd).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+        </div>`).join('');
+
+            document.getElementById('modal-total').textContent = p.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+            const obsDiv = document.getElementById('modal-obs');
+            if (p.obs) {
+                obsDiv.classList.remove('hidden');
+                document.getElementById('modal-obs-text').textContent = p.obs;
+            } else {
+                obsDiv.classList.add('hidden');
+            }
+
+            const btn = document.getElementById('modal-btn-acao');
+            if (p.status === 'novos') { btn.textContent = '🔥 Iniciar Preparo'; btn.className = btn.className.replace(/bg-\w+-\d+/g, '').trim() + ' bg-orange-500 text-white py-2.5 rounded-xl text-sm font-extrabold hover:bg-orange-600 active:scale-95 transition-all shadow'; }
+            else if (p.status === 'prep') { btn.textContent = '✅ Marcar como Pronto'; btn.className = btn.className.replace(/bg-\w+-\d+/g, '').trim() + ' bg-green-600 text-white py-2.5 rounded-xl text-sm font-extrabold hover:bg-green-700 active:scale-95 transition-all shadow'; }
+            else { btn.textContent = '✓ Concluído'; btn.disabled = true; }
+
+            btn.onclick = () => { avancarStatus(id); fecharModal(); };
+
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modal-content');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            content.classList.remove('scale-95');
+        }
+
+        function fecharModal() {
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modal-content');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            content.classList.add('scale-95');
+            pedidoModalId = null;
+        }
+
+        function toggleSound() {
+            soundOn = !soundOn;
+            const btn = document.getElementById('btn-sound');
+            btn.className = btn.className.replace(/(sound-on|sound-off)/g, '').trim() + ' ' + (soundOn ? 'sound-on' : 'sound-off');
+            btn.querySelector('span') && null;
+            showToast(soundOn ? 'Som ativado 🔔' : 'Som desativado 🔕');
+        }
+
+        function playSound() {
+            if (!soundOn) return;
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const beep = (freq, start, dur) => {
+                    const o = ctx.createOscillator();
+                    const g = ctx.createGain();
+                    o.connect(g); g.connect(ctx.destination);
+                    o.frequency.value = freq;
+                    g.gain.setValueAtTime(0.3, ctx.currentTime + start);
+                    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+                    o.start(ctx.currentTime + start);
+                    o.stop(ctx.currentTime + start + dur);
+                };
+                beep(880, 0, 0.15);
+                beep(1100, 0.18, 0.15);
+                beep(880, 0.36, 0.2);
+            } catch { }
+        }
+
+        let toastTimer;
+        function showToast(msg) {
+            clearTimeout(toastTimer);
+            const t = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = msg;
+            t.classList.remove('opacity-0', 'pointer-events-none');
+            t.classList.add('opacity-100');
+            toastTimer = setTimeout(() => {
+                t.classList.add('opacity-0', 'pointer-events-none');
+                t.classList.remove('opacity-100');
+            }, 3000);
+        }
+
+        const p1 = criarPedido(); p1.status = 'novos';
+        const p2 = criarPedido(); p2.status = 'prep'; p2.criadoEm -= 600000;
+        const p3 = criarPedido(); p3.status = 'prontos';
+        pedidos.push(p1, p2, p3);
+        renderBoard();
+    </script>
+
+</body>
+
+</html>
