@@ -192,12 +192,12 @@
                     Som
                 </button>
 
-                <button onclick="atualizarPedido()"
+                <button onclick="simularPedido()"
                     class="bg-red-600 hover:bg-red-700 active:scale-95 text-white rounded-lg px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                     </svg>
-                    Atualizar Pedidos
+                    Simular Pedido
                 </button>
 
                 <button onclick="limparProntos()"
@@ -375,28 +375,7 @@
         }
         setInterval(atualizarTimers, 1000);
 
-        function criarPedido() {
-            const qtd = Math.floor(Math.random() * 3) + 1;
-            const itensSel = [];
-            for (let i = 0; i < qtd; i++) {
-                const item = itensExemplo[Math.floor(Math.random() * itensExemplo.length)];
-                const existe = itensSel.find(x => x.nome === item.nome);
-                if (existe) existe.qtd++;
-                else itensSel.push({ ...item, qtd: 1 });
-            }
-            const total = itensSel.reduce((s, i) => s + i.preco * i.qtd, 0);
-            const obsSel = obs[Math.floor(Math.random() * obs.length)];
-            return {
-                id: `p${++pedidoCount}`,
-                numero: pedidoCount,
-                cliente: nomes[Math.floor(Math.random() * nomes.length)],
-                itens: itensSel,
-                total,
-                obs: obsSel,
-                status: 'novos',
-                criadoEm: Date.now(),
-            };
-        }
+
 
 
         function statusConfig(status) {
@@ -515,7 +494,7 @@
             }
         }
 
-        function atualizarPedido() {
+        function simularPedido() {
             // Substituído por polling real — este botão agora força um refresh manual
             carregarPedidos();
             showToast('🔄 Atualizando pedidos...');
