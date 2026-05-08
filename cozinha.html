@@ -643,10 +643,10 @@
                 const data = await resp.json();
 
                 // Mapear formato da API para o formato do board
-                const novos = data.map(p => ({
+                const doBanco = data.map(p => ({
                     id: String(p.id),
                     numero: p.id,
-                    cliente: p.cliente_nome,   // coluna correta da tabela
+                    cliente: p.cliente_nome,
                     itens: (p.itens || []).map(i => ({ nome: i.nome, preco: i.preco, qtd: i.quantidade })),
                     total: p.total,
                     obs: '',
@@ -655,14 +655,15 @@
                 }));
 
                 // Detectar pedidos novos para tocar som
-                const idsAntigos = pedidos.map(x => x.id);
-                const chegaram = novos.filter(p => !idsAntigos.includes(p.id) && p.status === 'novos');
+                const idsAtuais = pedidos.map(x => x.id);
+                const chegaram = doBanco.filter(p => !idsAtuais.includes(p.id) && p.status === 'novos');
                 if (chegaram.length > 0 && pedidos.length > 0) {
                     playSound();
                     chegaram.forEach(p => showToast(`🍕 Novo pedido #${p.numero} de ${p.cliente}!`));
                 }
 
-                pedidos = novos;
+                // ✅ O banco é a fonte da verdade — o PATCH já salvou o status correto lá
+                pedidos = doBanco;
                 renderBoard();
             } catch (e) {
                 console.error('Erro ao carregar pedidos:', e);
