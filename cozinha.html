@@ -667,7 +667,7 @@
                 const novos = data.map(p => ({
                     id: String(p.id),
                     numero: p.id,
-                    cliente: p.cliente,
+                    cliente: p.cliente_nome,   // coluna correta da tabela
                     itens: (p.itens || []).map(i => ({ nome: i.nome, preco: i.preco, qtd: i.quantidade })),
                     total: p.total,
                     obs: '',
