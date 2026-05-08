@@ -662,7 +662,6 @@
                     chegaram.forEach(p => showToast(`🍕 Novo pedido #${p.numero} de ${p.cliente}!`));
                 }
 
-                // ✅ O banco é a fonte da verdade — o PATCH já salvou o status correto lá
                 pedidos = doBanco;
                 renderBoard();
             } catch (e) {
