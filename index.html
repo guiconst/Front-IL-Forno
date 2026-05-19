@@ -202,6 +202,15 @@
             <div id="carrinho-itens-container" class="p-5 flex-1 overflow-y-auto flex flex-col gap-4"></div>
 
             <div class="p-5 border-t bg-gray-50 rounded-b-3xl sm:rounded-b-2xl">
+
+                <!-- ── Dados do Cliente ───────────────────────────── -->
+                <div class="flex flex-col gap-2 mb-4">
+                    <input id="input-nome" type="text" placeholder="Seu nome *"
+                        class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-400 bg-white placeholder-gray-400" />
+                    <input id="input-endereco" type="text" placeholder="Endereço de entrega *"
+                        class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-400 bg-white placeholder-gray-400" />
+                </div>
+
                 <div class="flex justify-between items-center mb-4">
                     <span class="text-lg font-bold">Total do Pedido:</span>
                     <span id="modal-carrinho-total" class="text-2xl font-black text-red-600">R$ 0,00</span>
@@ -480,41 +489,31 @@
         async function fecharPedido() {
             if (carrinho.length === 0) return;
 
-            // ── 1. Bloquear botão (anti duplo-clique) ─────────────────
+            // ── 1. Coletar e validar dados do cliente ─────────────────
+            const nomeCliente = document.getElementById('input-nome').value.trim();
+            const enderecoCliente = document.getElementById('input-endereco').value.trim();
+
+            if (!nomeCliente || !enderecoCliente) {
+                alert('Por favor, preencha seu nome e endereço de entrega.');
+                return;
+            }
+
+            // ── 2. Bloquear botão (anti duplo-clique) ─────────────────
             const btn = document.getElementById('btn-finalizar');
             btn.disabled = true;
             btn.classList.add('pointer-events-none', 'opacity-60');
             btn.innerHTML = '⏳ Enviando...';
 
-            // ── 2. Capturar nome do cliente (sessionStorage ou prompt) ─
-            let nomeCliente = sessionStorage.getItem('ilforno_nome');
-            if (!nomeCliente) {
-                nomeCliente = prompt('Qual é o seu nome?') || 'Cliente Anônimo';
-                sessionStorage.setItem('ilforno_nome', nomeCliente);
-            }
-
-            // ── 3. Capturar localização (Geolocation API) ─────────────
-            let localizacao = null;
-            try {
-                localizacao = await new Promise((resolve) => {
-                    navigator.geolocation.getCurrentPosition(
-                        pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-                        () => resolve(null),
-                        { timeout: 5000 }
-                    );
-                });
-            } catch (e) { localizacao = null; }
-
-            // ── 4. Montar o payload ───────────────────────────────────
+            // ── 3. Montar o payload exato que a API espera ────────────
             const total = carrinho.reduce((acc, item) => acc + (item.preco * item.quantidade), 0);
             const payloadPedido = {
-                cliente: nomeCliente,
-                localizacao: localizacao,
+                cliente_nome: nomeCliente,
+                cliente_endereco: enderecoCliente,
                 itens: carrinho,
                 total: total
             };
 
-            // ── 5. Enviar via Fetch POST ──────────────────────────────
+            // ── 4. Enviar via Fetch POST ──────────────────────────────
             try {
                 const resposta = await fetch(`${API_URL}/api/pedidos`, {
                     method: 'POST',
@@ -524,10 +523,12 @@
 
                 if (!resposta.ok) throw new Error(`Erro do servidor: ${resposta.status}`);
 
-                // ── 6. Sucesso: limpar carrinho e fechar modal ─────────
-                alert(`✅ Pedido enviado para a cozinha, ${nomeCliente}! Acompanhe pela tela da cozinha.`);
+                // ── 5. Sucesso: limpar carrinho e fechar modal ─────────
+                alert(`✅ Pedido enviado para a cozinha, ${nomeCliente}! Em breve chegará até você.`);
                 carrinho = [];
                 localStorage.removeItem('ilforno_carrinho');
+                document.getElementById('input-nome').value = '';
+                document.getElementById('input-endereco').value = '';
                 atualizarInterfaceCart();
                 fecharModalCarrinho();
 
@@ -535,7 +536,7 @@
                 alert('❌ Erro ao enviar pedido. Verifique sua conexão e tente novamente.');
                 console.error(err);
             } finally {
-                // ── 7. Reativar botão sempre ───────────────────────────
+                // ── 6. Reativar botão sempre ───────────────────────────
                 btn.disabled = false;
                 btn.classList.remove('pointer-events-none', 'opacity-60');
                 btn.innerHTML = '🍕 Finalizar Pedido';
